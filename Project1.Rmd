@@ -1,0 +1,140 @@
+---
+title: "BIOS 611 Project 1"
+author: "Emily Shives"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+output: html_document
+---
+
+```{r,setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+library(tidyverse)
+library(knitr)
+```
+
+##Airquality Data Set
+
+###How do the temperature and wind impact ozone levels?
+
+Ozone levels near the ground can be harmful to humans, plants, and animals. They can cause respiratory difficulties, especially for people that already have health problems. An "Ozone Alert Day" is sometimes declared when ozone levels are particularly high - warning people to do what they can do reduce emissions of ozone-causing pollutants. However, some ozone levels may have to do with the ambient weather conditions as well. What kind of weather is more likely to precipitate these alert days? I hypothesize that the worst ozone days would occur when there is not much wind to blow away the pollutants, with possibly more ozone on hotter days as well. This section of this report explores these questions and possible causation factors.
+
+The data set `airquality` contains data on ozone levels and several weather factors, such as temperature and wind speed, in New York, May to September 1973. Temperature and wind speed are readily reported on the local news daily, so what impact do these two measurements have on ozone levels?  
+
+The graph below shows a plot of ozone levels by temperature, with the color of the point showing the wind speed. What does this graph tell us?
+```{r}
+ggplot(data = airquality, size = 4) +
+  geom_point(mapping = aes(x = Temp, y= Ozone, color=Wind), size=4)+
+  labs(title = "Ozone levels are higher on hotter days, which are less windy", y = "Ozone Level in ppb", x = "Temperature in degrees F", color = "Wind Speed in mph")
+```
+
+My method is to examine the graph and determine what type of relationships we can see between the weather variables and ozone level. There is a positive correlation between ozone level and temperature. This means that the hotter the day is, the higher the level of ozone. Also, it appears that the hotter days tend to have less wind. The points on the graph with higher temperatures generally appear to be darker than most of the points with lower temperatures - meaning hot days seem to be less windy than cooler days. It may seem obvious to the casual observer, but this data seems to confirm that the wind has a cooling effect on the temperature.
+
+So overall, the hotter the day, the higher the ozone. But for any given temperature, there is still a decent amount of variability in the ozone value. For example, take a look at all the days that recorded a temperature of 81 degrees F.  
+
+```{r}
+air.81 <- airquality %>%
+  filter(Temp==81)%>%
+  arrange(Ozone) 
+air.81 %>%
+  kable()
+```
+
+The ozone levels here range all the way from `r min(air.81$Ozone, na.rm=TRUE)` to `r max(air.81$Ozone, na.rm=TRUE)`. This means the relationship between temperature and ozone is not definitive, but the higher temperature gives a warning that ozone levels may be high.
+
+Overall, the hotter and less windy the day is, the higher the ozone level. This aligns with my expectations. It seems that hotter days also have less wind, which lines up with the hypothesis that we originally stated that less wind to move the pollutants away may cause higher ozone levels. People with respiratory difficulties on Ozone Alert Days should be more wary on those hot, stale days and pay attention for the sake of their health most carefully during the hotter months.
+
+
+##Titanic Data Set
+###Did the class of a person on the Titanic have an impact on their survival?
+
+The unsinkable ship sank. We have heard the story of the Titanic; it hit an iceberg unexpectedly and plunged many of its passengers into the icy waters of the Atlantic. It was a tragedy, certainly. We may think that we are beyond ship tragedies today. There certainly have been incidents in recent years, though none like this loss of life. Have you heard the story of "poop cruise" Carnival Triumph in 2013? This was the cruise ship that experienced a fire that knocked out the power leading to sewage and biohazard bags literally piling up on decks and in hallways. The passengers spent 4 days without air conditioning, and largely without lights, water, food and working toilets. Did those that purchased better tickets fare better? Is this different treatment of classes still around? Viruses are also notorious on cruis ships, such as Royal Caribbean's Explorer of the Seas trip in 2014 that has the CDC's title of ship with the most sick passengers. Again, were those dining at the expensive seats healthier than those in the cheap seats?  
+
+With these stories in mind, perhaps there are lessons to be learned from the Titanic and their treatement of passengers of different econoic status. So then I ask, how was the evacuation handled on the ship? Did money save the lives of first class passengers? Did you know that more crew members survived than any ticket class of passengers? Based on the movie and word-of-mouth stories, I would expect that the large majority of the higher class passengers survived, and almost none of the third class passengers or crew survived. I will explore the data to try to answer some of these quesions.   
+
+```{r}
+Titanic %>% as.data.frame() %>%
+  group_by(Survived) %>%
+  summarize(sum = sum(Freq)) %>%
+  kable()
+Titanic %>% as.data.frame() %>%
+  group_by(Class,Survived) %>%
+  summarize(sum = sum(Freq)) %>%
+  ggplot(aes(x=Class,y=sum,fill=Survived,label=sum))+
+  geom_col()+
+  labs(title="Titanic passengers from higher classes more likely to survive", x="Ticket Class", y="Number of Passengers", fill="Survival Status")+
+  geom_text(size = 3, position = position_stack(vjust = 0.5))
+```
+
+Notice that `r 1490/(1490+711)*100` percent of the passengers perished. I grouped the data on the fate of the passengers on the Titanic by class and examined their survival status. Based on the graph it is clear that the class (economic status) of a passenger had a major impact on whether they survived or not. The absolute numbers of passengers of each type that survived are actually fairly similar, which was a surprise to me. In fact, second class had the smallest number of survivors, although they were also the smallest group. And the crew did have the largest number of survivors, but also by far the largest number of deaths. So if you picked a survivor at random, they would be close to equally likely to come from any of the four classes. However, if you picked a passenger at random, their class had a significant impact on whether they survived. In other words, the first class ticket was worth every penny they paid for this journey.  
+
+Other questions we might ask are what percentage of children survived or how many women were able to leave the ship with their children? How many more people could have been saved if all of the lifeboats had been filled to capacity and launched? Yes, the ticket class had the expected impact on survival (more money, more survivors), but the absolute number who survived in each class were not vastly different and not all the higher class passengers survived.
+
+
+##Faithful Data Set
+
+###How does the waiting time between eruptions relate to the length of the next eruption?
+
+The Old Faithful geyser in Yellowstone National Park, Wyoming, USA is a tourist destination. The eruptions are breathtaking and magnificent. The waiting game that you play before you see an eruption is...less magnificent. Imagine yourself on a family trip. How many minutes of entertaining the kids do you need to be prepared for? And what will be the reward once the wait is over? If you just missed the last eruption of Old Faithful and you are willing to wait a certain amount of time, will you see a short or long eruption? The kids are waiting, after all.  
+
+The faithful data set gives the waiting time to the next eruption matched to the eruption time in minutes. Using this data, I generated the plots below to examine the cost and pay off of this waiting game.  
+
+```{r}
+ggplot(data = faithful) +
+  geom_jitter(mapping = aes(y = eruptions, x = waiting)) +
+  geom_smooth(mapping = aes(y = eruptions, x = waiting),method="lm",se=FALSE) +
+  labs(title="Time Waiting versus Time of Eruption until Next Eruption",y="Eruption Time in minutes",x="Time Waiting until Next Eruption in minutes")
+```
+
+The graph shows that the longer the wait, the longer the eruption, with a decent straight line fit to the data. But there seems to be sort of a gap in the eruption times. There are shorter eruptions (less than 3 minutes), and longer eruptions (more than 3 minutes) that seem to form two different groups in this data.  
+
+```{r}
+faithful %>%
+  mutate(long.eruption=(eruptions>3)) %>%
+  ggplot(mapping = aes(y = eruptions, x = waiting, color = long.eruption)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)+
+  labs(title="Time Waiting versus Time of Eruption until Next Eruption by Eruption Length",y="Eruption Time in minutes",x="Time Waiting until Next Eruption in minutes", color="Long Eruption")
+faithful %>%
+  mutate(long.eruption=(eruptions>3)) %>%
+  group_by(long.eruption) %>%
+  summarise(mean.eruption = mean(eruptions), mean.wait = mean (waiting))%>%
+  kable()
+# faithful %>%
+#   mutate(long.eruption=(eruptions>3)) %>%
+#   ggplot(mapping = aes(y = eruptions, x = waiting, color = long.eruption)) +
+#   geom_point()
+```
+
+After grouping this data into long and short eruption data points, I found two separate linear models to fit the data. There is still the same positive correlation, but the gap in the data seems more pronounced when presented this way. It seems you could really get more pay off if you just pack enough snacks and games to hang around with the kids for the long haul! However, the 80 minute mean wait as opposed to a 54 minute mean wait, sounds long either way to be honest.
+
+If you are willing to wait 50 minutes, you will see a short eruption (less than 3 minutes), or none at all. If you are willing to wait 60 minutes, you will see a short eruption (less than 3 minutes), or none at all. If you are willing to wait 70 minutes, you might see a short or long eruption (probably up to around 4 minutes) or none at all. If you are willing to wait 80 minutes, you will see a short or long eruption (more than 3 minutes) or none at all. If you are willing to wait 90 minutes, you will see a short or long eruption (more than 3 minutes) or none at all. If you are willing to wait 100 minutes, you will see a short or long eruption (more than 3 minutes).
+
+You might ask whether the short eruptions are as grand as the long ones and vice versa. That would be a much harder thing to assess, as the beauty of the thing is subjective, whereas the time is not! Overall, the longer the wait, the longer the eruption. So pack plenty of games to entertain the little ones (and yourself).
+
+##Rivers Data Set
+
+###What is the average river length of major North American rivers?
+
+The Mississippi, the Colorado, the Rio Grande, the Saint Lawrence. What names come to mind when you think of rivers of North America? Probably the answer is one of the big ones, like these four. These are 4 of the 10 longest rivers in North America. But are most rivers in North America long? Or are there a lot of short rivers that you cross and pay no attention to? Are there rivers that you do not know because they are not in your region of travel? What is the average river length of major North American rivers? I would expect it to be "long," because those are the ones that I think of first.  
+
+The boxplot generated below looks at the grouping of river lengths, in miles. The box represents the lengths of the middle 50% of major rivers. This plot was made using the rivers data set of 141 observations.  
+
+```{r}
+rivers %>% as.data.frame() %>%
+  arrange() %>%
+  boxplot(main = "North American major river lengths", xlab="River length in miles", col="blue",horizontal=TRUE)
+#mean(rivers)
+```
+
+The average length of all these rivers is `r mean(rivers)` with a median of `r median(rivers)`. It seems like there are a few rivers that are extremely long that may be impacting these numbers. So, I decided to take these potential outliers out of the data set and see how this impacted these measures of averages. Below are two boxplots comparing the original data to the data based only on the not extremely long rivers.  
+
+```{r}
+short.rivers <- rivers %>% as.data.frame() %>%
+  arrange() %>%
+  filter(rivers<2000)
+#mean(short.rivers[,1])
+par(mfcol = c(2,1))
+boxplot(rivers,main = "North American major river lengths", xlab="River length in miles", col="blue",horizontal=TRUE,ylim=c(0,1500))
+boxplot(short.rivers,main = "North American major river lengths, excluding the longest rivers", xlab="River length in miles", col="blue",horizontal=TRUE,ylim=c(0,1500))
+```
+
+The mean of the shorter rivers is `r mean(short.rivers[,1])` and the median is `r median(short.rivers[,1])`. This is a change of `r mean(short.rivers[,1])-mean(rivers)` in mean and `r median(short.rivers[,1]) - median(rivers)` in median. This is expected because just a few very extreme observations have a large impact on the mean and a smaller impact on the median. The boxplots do not appear that different, although certainly the shorter rivers boxplot is shorter. Based on these graphs, it seems like there a lot of major rivers that are not very long. The average river length is `r mean(rivers)` miles, which is not very long compared to the longest river which is actually `r max(rivers)` miles long. The average North American river is fairly short. You might ask where these rivers are relative to each other as a further question, but that requires more data than we have for now.
